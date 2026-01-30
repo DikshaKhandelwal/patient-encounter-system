@@ -38,7 +38,8 @@ class Doctor(Base):
     )
 
     # Relationships
-    # Rule 5: ondelete='RESTRICT' prevents deletion of doctors with existing appointments
+    # Rule 5: ondelete='RESTRICT' prevents deletion of doctors
+    # with existing appointments
     appointments: Mapped[list["Appointment"]] = relationship(
         "Appointment", back_populates="doctor"
     )

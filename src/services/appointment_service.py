@@ -21,7 +21,8 @@ def create_appointment(db: Session, data: AppointmentCreate) -> Appointment:
 
     # Check for overlapping appointments
     # Get all appointments for this doctor on the same day (to reduce queries)
-    # Two appointments overlap if: appointment1.start < appointment2.end AND appointment2.start < appointment1.end
+    # Two appointments overlap if:
+    # appointment1.start < appointment2.end AND appointment2.start < appointment1.end
     existing_appointments = (
         db.query(Appointment).filter(Appointment.doctor_id == data.doctor_id).all()
     )
