@@ -1,0 +1,19 @@
+# Core dependencies
+fastapi==0.104.1
+sqlalchemy==2.0.23
+alembic==1.13.1
+uvicorn==0.24.0
+pydantic==2.5.0
+python-dotenv==1.0.0
+pymysql==1.1.0
+email-validator==2.1.0
+
+# Testing dependencies
+pytest==7.4.3
+pytest-cov==4.1.0
+requests==2.31.0
+
+# Development dependencies
+ruff==0.1.9
+black==23.12.1
+bandit==1.7.5

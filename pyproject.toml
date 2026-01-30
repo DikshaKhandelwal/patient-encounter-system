@@ -1,0 +1,84 @@
+[project]
+name = "patient-encounter-system"
+version = "0.1.0"
+description = "A FastAPI-based patient encounter management system with SQLAlchemy ORM"
+authors = [
+    {name = "DikshaKhandelwal",email = "diksha1010.dk@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi==0.104.1",
+    "sqlalchemy==2.0.23",
+    "alembic==1.13.1",
+    "uvicorn==0.24.0",
+    "pydantic==2.5.0",
+    "python-dotenv==1.0.0",
+    "pymysql==1.1.0",
+    "email-validator==2.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.3",
+    "pytest-cov==4.1.0",
+    "ruff==0.1.9",
+    "black==23.12.1",
+    "bandit==1.7.5",
+]
+test = [
+    "pytest==7.4.3",
+    "pytest-cov==4.1.0",
+    "requests==2.31.0",
+]
+
+[tool.poetry]
+packages = [{include = "patient_encounter_system", from = "src"}]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "alembic",
+    "htmlcov",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=src --cov-report=html --cov-report=term-missing -v"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
+skips = ["B101"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
