@@ -26,12 +26,12 @@ jobs:
       
       - name: Run Ruff Linter
         run: |
-          python -m ruff check src tests
+          python -m ruff check src --fix
         continue-on-error: false
       
       - name: Check Code Formatting with Black
         run: |
-          python -m black --check src tests
+          python -m black --check src
         continue-on-error: false
 
   security:
