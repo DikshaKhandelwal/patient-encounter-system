@@ -5,9 +5,7 @@ from src.schemas.doctor import DoctorCreate
 
 
 def create_doctor(db: Session, data: DoctorCreate) -> Doctor:
-    """
-    Create a new doctor record.
-    """
+    """Create a new doctor"""
     doctor = Doctor(
         full_name=data.full_name,
         specialization=data.specialization,
@@ -22,7 +20,5 @@ def create_doctor(db: Session, data: DoctorCreate) -> Doctor:
 
 
 def get_doctor_by_id(db: Session, doctor_id: int) -> Doctor | None:
-    """
-    Retrieve a doctor by their unique ID.
-    """
+    """Retrieve a doctor by ID"""
     return db.query(Doctor).filter(Doctor.id == doctor_id).first()

@@ -130,7 +130,7 @@ jobs:
       
       - name: Summary
         run: |
-          echo "✅ All checks passed!"
+          echo "All checks passed!"
           echo "- Linting: OK (Ruff)"
           echo "- Formatting: OK (Black)"
           echo "- Security: OK (Bandit)"

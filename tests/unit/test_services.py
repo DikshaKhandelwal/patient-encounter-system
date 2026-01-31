@@ -385,3 +385,168 @@ def test_appointment_with_max_duration(test_db):
     appointment = create_appointment(test_db, appt_data)
 
     assert appointment.duration_minutes == 180
+
+
+# ========== Additional Service Coverage Tests ==========
+
+
+def test_get_appointments_by_doctor_and_date(test_db):
+    """Test retrieving appointments by doctor and date"""
+    from src.services.appointment_service import get_appointments_by_doctor_and_date
+
+    # Create patient and doctor
+    patient_data = PatientCreate(
+        first_name="Date",
+        last_name="Test",
+        email="datetest@example.com",
+        phone="8888888888",
+        age=40,
+    )
+    patient = create_patient(test_db, patient_data)
+
+    doctor_data = DoctorCreate(full_name="Dr. Schedule", specialization="General")
+    doctor = create_doctor(test_db, doctor_data)
+
+    # Create appointments on specific date
+    target_date = datetime(2026, 3, 15, 10, 0, 0, tzinfo=timezone.utc)
+
+    appt1_data = AppointmentCreate(
+        patient_id=patient.id,
+        doctor_id=doctor.id,
+        start_datetime=target_date,
+        duration_minutes=30,
+    )
+    create_appointment(test_db, appt1_data)
+
+    appt2_data = AppointmentCreate(
+        patient_id=patient.id,
+        doctor_id=doctor.id,
+        start_datetime=target_date + timedelta(hours=2),
+        duration_minutes=30,
+    )
+    create_appointment(test_db, appt2_data)
+
+    # Get appointments for that date
+    appointments = get_appointments_by_doctor_and_date(test_db, doctor.id, target_date)
+
+    assert len(appointments) == 2
+    assert appointments[0].doctor_id == doctor.id
+
+
+def test_get_appointments_by_doctor_and_date_empty(test_db):
+    """Test retrieving appointments when none exist"""
+    from src.services.appointment_service import get_appointments_by_doctor_and_date
+
+    doctor_data = DoctorCreate(full_name="Dr. Empty", specialization="Surgery")
+    doctor = create_doctor(test_db, doctor_data)
+
+    target_date = datetime(2026, 4, 1, 0, 0, 0, tzinfo=timezone.utc)
+    appointments = get_appointments_by_doctor_and_date(test_db, doctor.id, target_date)
+
+    assert len(appointments) == 0
+
+
+def test_get_appointments_by_doctor_and_date_naive_raises(test_db):
+    """Test that naive datetime raises ValueError"""
+    from src.services.appointment_service import get_appointments_by_doctor_and_date
+
+    doctor_data = DoctorCreate(full_name="Dr. Naive", specialization="Cardiology")
+    doctor = create_doctor(test_db, doctor_data)
+
+    naive_date = datetime(2026, 5, 1, 0, 0, 0)  # No timezone
+
+    with pytest.raises(ValueError, match="Date must be timezone-aware"):
+        get_appointments_by_doctor_and_date(test_db, doctor.id, naive_date)
+
+
+def test_create_appointment_doctor_not_exist(test_db):
+    """Test creating appointment with non-existent doctor"""
+    patient_data = PatientCreate(
+        first_name="Test",
+        last_name="Patient",
+        email="test.doc@example.com",
+        phone="9999999999",
+        age=30,
+    )
+    patient = create_patient(test_db, patient_data)
+
+    appt_time = datetime.now(timezone.utc) + timedelta(days=1)
+    appt_data = AppointmentCreate(
+        patient_id=patient.id,
+        doctor_id=99999,  # Non-existent doctor
+        start_datetime=appt_time,
+        duration_minutes=30,
+    )
+
+    with pytest.raises(ValueError, match="Doctor does not exist"):
+        create_appointment(test_db, appt_data)
+
+
+def test_create_appointment_doctor_inactive(test_db):
+    """Test creating appointment with inactive doctor"""
+    patient_data = PatientCreate(
+        first_name="Another",
+        last_name="Patient",
+        email="another@example.com",
+        phone="1112223333",
+        age=25,
+    )
+    patient = create_patient(test_db, patient_data)
+
+    doctor_data = DoctorCreate(
+        full_name="Dr. Inactive", specialization="Surgery", is_active=False
+    )
+    doctor = create_doctor(test_db, doctor_data)
+
+    appt_time = datetime.now(timezone.utc) + timedelta(days=1)
+    appt_data = AppointmentCreate(
+        patient_id=patient.id,
+        doctor_id=doctor.id,
+        start_datetime=appt_time,
+        duration_minutes=30,
+    )
+
+    with pytest.raises(ValueError, match="Doctor is not active"):
+        create_appointment(test_db, appt_data)
+
+
+def test_ensure_timezone_aware_already_aware(test_db):
+    """Test _ensure_timezone_aware with already timezone-aware datetime"""
+    from src.services.appointment_service import _ensure_timezone_aware
+
+    aware_dt = datetime(2026, 7, 1, 10, 0, 0, tzinfo=timezone.utc)
+    result = _ensure_timezone_aware(aware_dt)
+
+    assert result == aware_dt
+    assert result.tzinfo == timezone.utc
+
+
+def test_create_appointment_past_datetime(test_db):
+    """Test that appointments in the past are rejected"""
+    from pydantic import ValidationError as PydanticValidationError
+
+    patient_data = PatientCreate(
+        first_name="Past",
+        last_name="Test",
+        email="past.test@example.com",
+        phone="8888888888",
+        age=35,
+    )
+    patient = create_patient(test_db, patient_data)
+
+    doctor_data = DoctorCreate(full_name="Dr. Past", specialization="General")
+    doctor = create_doctor(test_db, doctor_data)
+
+    # Try to create appointment in the past - Pydantic validator
+    past_time = datetime.now(timezone.utc) - timedelta(hours=1)
+
+    with pytest.raises(
+        PydanticValidationError,
+        match="Appointment must be scheduled in the future",
+    ):
+        AppointmentCreate(
+            patient_id=patient.id,
+            doctor_id=doctor.id,
+            start_datetime=past_time,
+            duration_minutes=30,
+        )

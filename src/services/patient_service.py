@@ -6,9 +6,7 @@ from src.schemas.patient import PatientCreate
 
 
 def create_patient(db: Session, data: PatientCreate) -> Patient:
-    """
-    Create a new patient record.
-    """
+    """Create a new patient"""
     patient = Patient(
         first_name=data.first_name,
         last_name=data.last_name,
@@ -30,7 +28,5 @@ def create_patient(db: Session, data: PatientCreate) -> Patient:
 
 
 def get_patient_by_id(db: Session, patient_id: int) -> Patient | None:
-    """
-    Retrieve a patient by their unique ID.
-    """
+    """Retrieve a patient by ID"""
     return db.query(Patient).filter(Patient.id == patient_id).first()

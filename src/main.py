@@ -31,10 +31,7 @@ def get_db():
 # Patient APIs
 @app.post("/patients", response_model=PatientRead, status_code=status.HTTP_201_CREATED)
 def create_patient_endpoint(patient: PatientCreate, db: Session = Depends(get_db)):
-    """
-    Create a new patient.
-
-    """
+    """Create a new patient"""
     try:
         return create_patient(db, patient)
     except ValueError as e:
@@ -45,10 +42,7 @@ def create_patient_endpoint(patient: PatientCreate, db: Session = Depends(get_db
 
 @app.get("/patients/{patient_id}", response_model=PatientRead)
 def get_patient_endpoint(patient_id: int, db: Session = Depends(get_db)):
-    """
-    Retrieve a patient by ID.
-
-    """
+    """Retrieve a patient by ID"""
     patient = get_patient_by_id(db, patient_id)
     if not patient:
         raise HTTPException(
@@ -60,10 +54,7 @@ def get_patient_endpoint(patient_id: int, db: Session = Depends(get_db)):
 # Doctor APIs
 @app.post("/doctors", response_model=DoctorRead, status_code=status.HTTP_201_CREATED)
 def create_doctor_endpoint(doctor: DoctorCreate, db: Session = Depends(get_db)):
-    """
-    Create a new doctor.
-
-    """
+    """Create a new doctor"""
     try:
         return create_doctor(db, doctor)
     except ValueError as e:
@@ -74,10 +65,7 @@ def create_doctor_endpoint(doctor: DoctorCreate, db: Session = Depends(get_db)):
 
 @app.get("/doctors/{doctor_id}", response_model=DoctorRead)
 def get_doctor_endpoint(doctor_id: int, db: Session = Depends(get_db)):
-    """
-    Retrieve a doctor by ID.
-
-    """
+    """Retrieve a doctor by ID"""
     doctor = get_doctor_by_id(db, doctor_id)
     if not doctor:
         raise HTTPException(
@@ -90,17 +78,7 @@ def get_doctor_endpoint(doctor_id: int, db: Session = Depends(get_db)):
 def update_doctor_endpoint(
     doctor_id: int, doctor_update: DoctorUpdate, db: Session = Depends(get_db)
 ):
-    """
-    Update a doctor's information.
-
-    Can update:
-    - full_name
-    - specialization
-    - is_active (for deactivating/reactivating doctors)
-
-    - Returns 200 on success
-    - Returns 404 if doctor not found
-    """
+    """Update a doctor's information"""
     doctor = get_doctor_by_id(db, doctor_id)
     if not doctor:
         raise HTTPException(
@@ -127,11 +105,7 @@ def update_doctor_endpoint(
 def create_appointment_endpoint(
     appointment: AppointmentCreate, db: Session = Depends(get_db)
 ):
-    """
-    Schedule a new appointment.
-
-
-    """
+    """Schedule a new appointment"""
     try:
         return create_appointment(db, appointment)
     except ValueError as e:
@@ -149,10 +123,7 @@ def list_appointments_endpoint(
     doctor_id: int | None = Query(None, description="Optional doctor ID to filter"),
     db: Session = Depends(get_db),
 ):
-    """
-    List appointments for a specific date.
-
-    """
+    """List appointments for a specific date"""
     try:
         parsed_date = datetime.strptime(date, "%Y-%m-%d")
         parsed_date = parsed_date.replace(tzinfo=timezone.utc)

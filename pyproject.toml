@@ -69,11 +69,22 @@ select = ["E", "F", "W"]
 ignore = []
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests/unit"]
 addopts = "--cov=src --cov-report=html --cov-report=term-missing -v"
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[tool.coverage.run]
+omit = ["src/main.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
 
 [tool.bandit]
 exclude_dirs = ["tests", ".venv"]

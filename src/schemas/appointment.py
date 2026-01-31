@@ -21,11 +21,10 @@ class AppointmentCreate(BaseModel):
 
     @field_validator("start_datetime")
     def validate_start_datetime(cls, v):
-        # Rule 3: All datetime values must be timezone-aware
+
         if v.tzinfo is None:
             raise ValueError("start_datetime must be timezone-aware")
 
-        # Rule 2: Appointments must be scheduled in the future
         if v <= datetime.now(timezone.utc):
             raise ValueError("Appointment must be scheduled in the future")
 

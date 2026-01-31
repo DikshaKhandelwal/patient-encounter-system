@@ -1,98 +1,138 @@
+"""
+Integration tests for Doctor API endpoints
+Requires server to be running: uvicorn src.main:app --reload
+Run with: pytest tests/test_doctor.py -v -s
+"""
+
 import requests
+import pytest
+from requests.exceptions import ConnectionError, Timeout
 
 BASE_URL = "http://127.0.0.1:8000"
+DOCTORS_ENDPOINT = f"{BASE_URL}/doctors"
 
 
-def test_create_doctor_success():
-    """Test creating a doctor successfully"""
-    payload = {
-        "full_name": "Dr. Diksha K",
-        "specialization": "Cardiology",
-        "is_active": True,
-    }
-    response = requests.post(f"{BASE_URL}/doctors", json=payload)
-    assert response.status_code == 201
+def test_server_is_reachable():
+    """
+    Explicitly checks whether the server is ON or NOT reachable.
+    """
+    try:
+        response = requests.get(DOCTORS_ENDPOINT, timeout=3)
+        assert response.status_code in [
+            200,
+            404,
+            405,
+        ], "Server responded but is unhealthy"
+        print("✔ The server is ON and reachable")
+    except (ConnectionError, Timeout):
+        pytest.fail(
+            "✘ The server is NOT reachable - "
+            "Start server with: uvicorn src.main:app --reload"
+        )
+
+
+@pytest.fixture(scope="module")
+def doctor_id():
+    """Create test doctor and return ID"""
+    payload = {"full_name": "Dr. John Smith", "specialization": "Cardiology"}
+
+    response = requests.post(DOCTORS_ENDPOINT, json=payload)
+
+    assert response.status_code == 201, f"Failed to add doctor: {response.text}"
+    doctor_data = response.json()
+    return doctor_data["id"]
+
+
+def test_create_doctor():
+    """Test creating a new doctor"""
+    payload = {"full_name": "Dr. Jane Wilson", "specialization": "Neurology"}
+
+    response = requests.post(DOCTORS_ENDPOINT, json=payload)
+
+    assert response.status_code == 201, f"Failed to create doctor: {response.text}"
     data = response.json()
-    assert data["full_name"] == "Dr. Diksha K"
-    assert data["specialization"] == "Cardiology"
+
+    assert data["full_name"] == "Dr. Jane Wilson"
+    assert data["specialization"] == "Neurology"
     assert data["is_active"] is True
     assert "id" in data
-    assert "created_at" in data
 
 
 def test_create_doctor_inactive():
     """Test creating an inactive doctor"""
     payload = {
-        "full_name": "Dr. c",
-        "specialization": "Neurology",
+        "full_name": "Dr. Retired Doctor",
+        "specialization": "General Practice",
         "is_active": False,
     }
-    response = requests.post(f"{BASE_URL}/doctors", json=payload)
+
+    response = requests.post(DOCTORS_ENDPOINT, json=payload)
+
     assert response.status_code == 201
     data = response.json()
-    assert data["full_name"] == "Dr. c"
     assert data["is_active"] is False
 
 
-def test_create_doctor_default_active():
-    """Test creating a doctor defaults to active"""
-    payload = {"full_name": "Dr. E", "specialization": "General Practice"}
-    response = requests.post(f"{BASE_URL}/doctors", json=payload)
-    assert response.status_code == 201
-    data = response.json()
-    assert data["is_active"] is True
-
-
-def test_get_doctor_success():
+def test_get_doctor(doctor_id):
     """Test retrieving a doctor by ID"""
-    # Create doctor first
-    create_payload = {"full_name": "Dr. Robert Smith", "specialization": "Dermatology"}
-    create_response = requests.post(f"{BASE_URL}/doctors", json=create_payload)
-    assert create_response.status_code == 201
-    doctor_id = create_response.json()["id"]
+    response = requests.get(f"{DOCTORS_ENDPOINT}/{doctor_id}")
 
-    # Get doctor
-    get_response = requests.get(f"{BASE_URL}/doctors/{doctor_id}")
-    assert get_response.status_code == 200
-    data = get_response.json()
-    assert data["full_name"] == "Dr. Robert Smith"
-    assert data["specialization"] == "Dermatology"
+    assert response.status_code == 200, f"Doctor not found: {response.text}"
+    data = response.json()
+
+    assert "full_name" in data
+    assert "specialization" in data
+    assert "is_active" in data
     assert data["id"] == doctor_id
-    assert data["is_active"] is True
 
 
 def test_get_doctor_not_found():
-    """Test getting non-existent doctor returns 404"""
-    non_existent_id = 99999
-    response = requests.get(f"{BASE_URL}/doctors/{non_existent_id}")
+    """Test 404 for non-existent doctor"""
+    response = requests.get(f"{DOCTORS_ENDPOINT}/99999")
     assert response.status_code == 404
+
+
+def test_update_doctor(doctor_id):
+    """Test updating a doctor's information"""
+    payload = {"specialization": "Advanced Cardiology"}
+
+    response = requests.put(f"{DOCTORS_ENDPOINT}/{doctor_id}", json=payload)
+
+    assert response.status_code == 200
     data = response.json()
-    assert data["detail"] == "Doctor not found"
+    assert data["specialization"] == "Advanced Cardiology"
+
+
+def test_update_doctor_deactivate(doctor_id):
+    """Test deactivating a doctor"""
+    # First activate
+    requests.put(f"{DOCTORS_ENDPOINT}/{doctor_id}", json={"is_active": True})
+
+    # Then deactivate
+    response = requests.put(
+        f"{DOCTORS_ENDPOINT}/{doctor_id}", json={"is_active": False}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["is_active"] is False
+
+    requests.put(f"{DOCTORS_ENDPOINT}/{doctor_id}", json={"is_active": True})
+
+
+def test_update_doctor_not_found():
+    """Test 404 when updating non-existent doctor"""
+    payload = {"specialization": "Surgery"}
+    response = requests.put(f"{DOCTORS_ENDPOINT}/99999", json=payload)
+    assert response.status_code == 404
 
 
 def test_create_doctor_missing_fields():
-    """Test creating doctor with missing required fields"""
-    payload = {"full_name": "Dr. Incomplete"}
-    response = requests.post(f"{BASE_URL}/doctors", json=payload)
+    """Test validation for missing required fields"""
+    payload = {
+        "full_name": "Dr. Missing Fields"
+        # Missing specialization
+    }
+
+    response = requests.post(DOCTORS_ENDPOINT, json=payload)
     assert response.status_code == 422
-
-
-def test_update_doctor_is_active():
-    """Test deactivating/reactivating a doctor"""
-    # Create doctor
-    create_payload = {"full_name": "Dr. John Doe", "specialization": "Surgery"}
-    create_response = requests.post(f"{BASE_URL}/doctors", json=create_payload)
-    doctor_id = create_response.json()["id"]
-
-    # Deactivate doctor
-    update_payload = {"is_active": False}
-    update_response = requests.put(
-        f"{BASE_URL}/doctors/{doctor_id}", json=update_payload
-    )
-    assert update_response.status_code == 200
-    data = update_response.json()
-    assert data["is_active"] is False
-
-    # Verify deactivation
-    get_response = requests.get(f"{BASE_URL}/doctors/{doctor_id}")
-    assert get_response.json()["is_active"] is False

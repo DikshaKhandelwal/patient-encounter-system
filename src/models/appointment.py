@@ -1,6 +1,6 @@
-from sqlalchemy import String, ForeignKey, DateTime, func
+from sqlalchemy import String, ForeignKey, DateTime, func, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from src.database import Base
@@ -11,10 +11,7 @@ if TYPE_CHECKING:
 
 
 class Appointment(Base):
-    """
-    Represents a scheduled medical encounter.
-
-    """
+    """Represents a scheduled medical encounter"""
 
     __tablename__ = "diksha-appointments1"
 
@@ -47,8 +44,23 @@ class Appointment(Base):
     patient: Mapped["Patient"] = relationship("Patient", back_populates="appointments")
     doctor: Mapped["Doctor"] = relationship("Doctor", back_populates="appointments")
 
-    # Derived property - Appointment end time (not stored in database)
     @property
     def end_datetime(self) -> datetime:
-        """Calculate appointment end time = start time + duration"""
-        return self.start_datetime + timedelta(minutes=self.duration_minutes)
+        """Calculate appointment end time"""
+        # Ensure start_datetime is timezone-aware before calculation
+        start = self.start_datetime
+        if start and start.tzinfo is None:
+            start = start.replace(tzinfo=timezone.utc)
+        return start + timedelta(minutes=self.duration_minutes)
+
+
+@event.listens_for(Appointment, "load")
+def ensure_tz_aware_on_load(appointment, context):
+    """Ensure loaded appointments have timezone-aware datetimes"""
+    if appointment.start_datetime and appointment.start_datetime.tzinfo is None:
+        # Replace with UTC timezone since SQLite doesn't store timezone info
+        object.__setattr__(
+            appointment,
+            "start_datetime",
+            appointment.start_datetime.replace(tzinfo=timezone.utc),
+        )
