@@ -154,9 +154,7 @@ def list_appointments_endpoint(
 
     """
     try:
-
         parsed_date = datetime.strptime(date, "%Y-%m-%d")
-
         parsed_date = parsed_date.replace(tzinfo=timezone.utc)
 
         if doctor_id:
@@ -166,8 +164,10 @@ def list_appointments_endpoint(
             )
         else:
             # Get all appointments for that date
-            from sqlalchemy import and_
             from datetime import timedelta
+
+            from sqlalchemy import and_
+
             from src.models.appointment import Appointment
 
             day_start = parsed_date.replace(hour=0, minute=0, second=0, microsecond=0)
