@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Ensure LF line endings are used
+          lf: true
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -26,12 +29,12 @@ jobs:
       
       - name: Run Ruff Linter
         run: |
-          python -m ruff check src --fix
+          python -m ruff check src tests
         continue-on-error: false
       
       - name: Check Code Formatting with Black
         run: |
-          black --check src 
+          python -m black --check src tests
         continue-on-error: false
 
   security:
@@ -39,6 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lf: true
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -69,6 +74,8 @@ jobs:
     needs: [lint, security]
     steps:
       - uses: actions/checkout@v4
+        with:
+          lf: true
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -103,6 +110,8 @@ jobs:
     needs: [test]
     steps:
       - uses: actions/checkout@v4
+        with:
+          lf: true
       
       - name: Set up Python
         uses: actions/setup-python@v4
