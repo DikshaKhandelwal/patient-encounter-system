@@ -31,7 +31,7 @@ jobs:
       
       - name: Check Code Formatting with Black
         run: |
-          python -m black --check src --fix
+          black --check src 
         continue-on-error: false
 
   security:
