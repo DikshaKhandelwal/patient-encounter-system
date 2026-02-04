@@ -12,12 +12,13 @@ load_dotenv()
 IS_TESTING = os.getenv("PYTEST_CURRENT_TEST") is not None or "pytest" in sys.modules
 
 if IS_TESTING:
-    DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
+    DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///test.db")
 else:
     DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Fall back to test database if DATABASE_URL not set
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
+    DATABASE_URL = "sqlite:///test.db"
 
 # Database Setup
 engine_kwargs = {
@@ -27,7 +28,7 @@ engine_kwargs = {
 
 if DATABASE_URL.startswith("sqlite"):
     engine_kwargs["connect_args"] = {"check_same_thread": False}
-    if DATABASE_URL == "sqlite:///:memory:":
+    if DATABASE_URL in ("sqlite:///:memory:", "sqlite:///test.db"):
         engine_kwargs["poolclass"] = StaticPool
 else:
     engine_kwargs.update(
