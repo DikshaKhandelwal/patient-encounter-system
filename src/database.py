@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy.pool import StaticPool
 
 # Database Setup - SQLite with test.db
@@ -12,4 +12,7 @@ engine = create_engine(
     echo=False,
 )
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
-Base = declarative_base()
+
+
+class Base(DeclarativeBase):
+    pass
