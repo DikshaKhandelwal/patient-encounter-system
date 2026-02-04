@@ -28,6 +28,16 @@ def get_db():
         db.close()
 
 
+@app.get("/", tags=["Health"])
+def health_check():
+    """Health check endpoint for API validation"""
+    return {
+        "status": "healthy",
+        "service": "Patient Encounter System",
+        "version": "1.0.0",
+    }
+
+
 # Patient APIs
 @app.post("/patients", response_model=PatientRead, status_code=status.HTTP_201_CREATED)
 def create_patient_endpoint(patient: PatientCreate, db: Session = Depends(get_db)):

@@ -1,12 +1,19 @@
 """
-Shared pytest fixtures for all test files
+Shared pytest configuration for all tests
 """
 
-import pytest
-from fastapi.testclient import TestClient
+import sys
+from pathlib import Path
 
-from src.main import app
-from src.database import Base, engine
+# Add project root to Python path so imports work
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+
+from src.main import app  # noqa: E402
+from src.database import Base, engine  # noqa: E402
 
 
 @pytest.fixture(scope="function")
