@@ -30,7 +30,7 @@ pytest tests/test_*.py -v -s
 - SQLAlchemy for database stuff
 - Pydantic for validation
 - pytest for testing
-- MySQL in production, SQLite for tests
+- SQLite database (automatic fallback, no setup needed)
 
 ## Key features
 

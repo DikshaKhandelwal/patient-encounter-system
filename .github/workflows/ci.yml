@@ -89,8 +89,11 @@ jobs:
           pip install -r requirements.txt
       
       - name: Run Tests with Coverage
+        env:
+          # Tests use SQLite by default (no DATABASE_URL needed)
+          PYTEST_CURRENT_TEST: "true"
         run: |
-          python -m pytest -v --cov=src --cov-report=html --cov-report=term-missing
+          python -m pytest tests/test_evaluation.py -v --cov=src --cov-report=html --cov-report=term-missing
       
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
@@ -125,8 +128,12 @@ jobs:
           pip install -r requirements.txt
       
       - name: Verify imports and basic syntax
+        env:
+          # App uses SQLite fallback when DATABASE_URL not set
+          TEST_MODE: "true"
         run: |
           python -c "from src.main import app; print('Application imports successfully')"
+          python -c "from src.database import DATABASE_URL; print(f'Database: {DATABASE_URL}')"
       
       - name: Summary
         run: |

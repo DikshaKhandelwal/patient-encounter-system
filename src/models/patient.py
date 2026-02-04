@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class Patient(Base):
     __tablename__ = "diksha-patients1"
-    __table_args__ = {"mysql_engine": "InnoDB", "extend_existing": True}
+    __table_args__ = {"extend_existing": True}
 
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
