@@ -1,4 +1,4 @@
-from pydantic import BaseModel, PositiveInt
+from pydantic import BaseModel, PositiveInt, ConfigDict
 from datetime import datetime
 
 
@@ -15,8 +15,7 @@ class DoctorUpdate(BaseModel):
 
 
 class DoctorRead(DoctorCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: PositiveInt
     created_at: datetime
-
-    class Config:
-        from_attributes = True

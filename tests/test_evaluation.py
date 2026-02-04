@@ -11,25 +11,17 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
 
 from src.main import app  # noqa: E402
 from src.database import Base, engine  # noqa: E402
 
-# Initialize test client
+# Ensure a clean DB for these API tests
+Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(bind=engine)
+
 client = TestClient(app)
-
-
-@pytest.fixture(scope="module", autouse=True)
-def setup_database():
-    """Create fresh SQLite database for tests"""
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
-
 
 # ========== Patient Tests ==========
 

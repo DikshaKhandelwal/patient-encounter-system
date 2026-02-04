@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import datetime, timezone
 
 
@@ -31,6 +31,8 @@ class AppointmentCreate(BaseModel):
 
 
 class AppointmentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     patient_id: int
     doctor_id: int
@@ -38,6 +40,3 @@ class AppointmentRead(BaseModel):
     duration_minutes: int
     reason: str | None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
